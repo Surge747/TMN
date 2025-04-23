@@ -1634,6 +1634,7 @@ def render_rays_torch(
 test_batch_size = 4096 # No n_device division for single GPU / handled by DDP sampler later
 test_keep_num = point_grid_size * 3 // 4
 test_threshold = 0.1
+image_threshold = -100000.0
 test_wbgcolor = 0.0 # Will use bg_color directly in render_rays_torch
 
 # Simplified render_loop returning TENSORS on CPU
@@ -1722,7 +1723,7 @@ initial_rays = camera_ray_batch(test_pose, test_hwf) # Generate rays on device
 
 # Render using the PyTorch loop
 out = render_loop_torch(initial_rays, model, test_batch_size,
-                        test_keep_num, test_threshold, bg_color, white_bkgd,
+                        test_keep_num, image_threshold, bg_color, white_bkgd,
                         scene_type, point_grid_size, grid_min, grid_max,
                         point_grid_diff_lr_scale)
 
@@ -2007,7 +2008,7 @@ for i in tqdm(range(step_init, training_iters + 1), initial=step_init, total=tra
         # Render using the PyTorch loop
         eval_out = render_loop_torch(
             eval_rays, model, test_batch_size, # Use test batch size for eval chunk
-            test_keep_num, test_threshold, bg_color, white_bkgd,
+            test_keep_num, image_threshold, bg_color, white_bkgd,
             scene_type, point_grid_size, grid_min, grid_max,
             point_grid_diff_lr_scale
         )
@@ -2102,7 +2103,7 @@ with torch.no_grad(): # Ensure no gradients are computed
         # Render the image
         render_out = render_loop_torch(
             rays, model, test_batch_size,
-            test_keep_num, test_threshold, bg_color, white_bkgd,
+            test_keep_num, image_threshold, bg_color, white_bkgd,
             scene_type, point_grid_size, grid_min, grid_max,
             point_grid_diff_lr_scale
         )
